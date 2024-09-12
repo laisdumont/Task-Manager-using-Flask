@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Especifica o Dockerfile para construir a imagem
+    container_name: flask_app
+    ports:
+      - "5000:5000"  # Mapeia a porta 5000 do container para a porta 5000 no host
+    volumes:
+      - .:/app  # Monta o diretório atual no diretório /app do container
+    environment:
+      FLASK_ENV: development  # Define o ambiente como desenvolvimento
+    command: pipenv run python todo_project/run.py  # Comando para iniciar o Flask
