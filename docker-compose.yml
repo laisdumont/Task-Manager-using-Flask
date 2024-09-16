@@ -1,13 +1,36 @@
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile  # Especifica o Dockerfile para construir a imagem
-    container_name: flask_app
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
     ports:
-      - "5000:5000"  # Mapeia a porta 5000 do container para a porta 5000 no host
+      - 80:80
+      - 443:443
+      - 22:22
     volumes:
-      - .:/app  # Monta o diretório atual no diretório /app do container
+      - './config/gitlab:/etc/gitlab'
+      - './config/logs:/var/log/gitlab'
+      - './config/data:/var/opt/gitlab'
+    hostname: 'gitlab.example.com'
     environment:
-      FLASK_ENV: development  # Define o ambiente como desenvolvimento
-    command: pipenv run python todo_project/run.py  # Comando para iniciar o Flask
+      GITLAB_OMNIBUS_CONFIG: |
+        EXTERNAL_URL='http://gitlab'
+    networks:
+      - gitlab
+
+  gitlab-runner:
+    image: 'gitlab/gitlab-runner:latest'
+    container_name: gitlab-runner
+    depends_on:
+      - gitlab
+    volumes:
+      - './config/gitlab-runner:/etc/gitlab-runner'
+      - /var/run/docker.sock:/var/run/docker.sock
+    hostname: gitlab-runner
+    networks:
+      - gitlab
+    restart: always
+
+networks:
+  gitlab:
+    name: gitlab
+    external: true

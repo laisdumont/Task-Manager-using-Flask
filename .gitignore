@@ -127,4 +127,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-todo_project/todo_project/site.db
