@@ -1,6 +1,7 @@
 stages:
   - build
   - tests
+  - bandit
   - stage
   - deploy
 
@@ -21,6 +22,14 @@ test_job:
     - pipenv install pytest
     - pipenv run pytest todo_project/todo_project/tests/test_routes.py
   
+bandit_job:
+  image: python:3.10-slim
+  stage: bandit
+  script:
+    - pip install --no-cache-dir pipenv
+    - pipenv install bandit
+    - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium 
+
 stage:
   image: docker:latest
   stage: stage
