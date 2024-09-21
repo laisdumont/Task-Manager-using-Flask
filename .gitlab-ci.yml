@@ -2,6 +2,7 @@ stages:
   - build
   - tests
   - bandit
+  - dependency-check
   - stage
   - deploy
 
@@ -30,6 +31,12 @@ bandit_job:
     - pipenv install bandit
     - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium 
 
+dependency-check:
+  image: docker:latest
+  stage: dependency-check
+  script:
+    - docker run --rm --volume $(pwd):/src owasp/dependency-check --project "todo_project" --scan /src
+
 stage:
   image: docker:latest
   stage: stage
@@ -41,5 +48,5 @@ deploy:
   image: docker:latest
   stage: deploy
   script:
-    - docker stop flask-stage && docker rm flask-stage
-    - docker run -d --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 9000:9000 flask/hdb
+    - docker stop flask && docker rm flask
+    - docker run -d --name flask --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 9000:9000 flask/hdb
