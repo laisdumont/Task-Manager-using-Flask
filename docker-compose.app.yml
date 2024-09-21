@@ -1,0 +1,20 @@
+services:
+  web:
+    image: 'flask/hdb'
+    container_name: flask
+    ports:
+      - 80:9000
+    volumes:
+      - /dev/log:/dev/log:rw
+    environment:
+      SECRET_KEY: laisiinha18
+      DATABASE_URI: sqlite:////app/todo_project/site.db
+      PYTHONUNBUFFERED: 1
+    networks:
+      - gitlab
+    restart: always
+
+networks:
+  gitlab:
+    name: gitlab
+    external: true

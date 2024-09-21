@@ -43,14 +43,14 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         # Check if the user exists and the password is valid
         if user and bcrypt.check_password_hash(user.password, form.password.data):
-            app.logger.info(f'Login bem sucedido: {form.username.data}')
             login_user(user)
             task_form = TaskForm()
             flash('Login Successfull', 'success')
+            app.logger.info(f'Login bem sucedido: {form.username.data}')
             return redirect(url_for('all_tasks'))
         else:
-            app.logger.warning(f'Falha no login: {form.username.data}')
             flash('Login Unsuccessful. Please check Username Or Password', 'danger')
+            app.logger.warning(f'Falha no login: {form.username.data}')
     
     return render_template('login.html', title='Login', form=form)
     

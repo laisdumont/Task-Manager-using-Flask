@@ -1,0 +1,31 @@
+stages:
+  - build
+  - tests
+  - stage
+
+build:
+  image: docker:latest
+  stage: build
+  script:
+    - docker build -t flask/hdb -f ./config/Dockerfile .
+
+test_job:
+  stage: tests
+  image: python:3.10.15-slim
+  services:
+    - docker:27.2.1-dind
+  before_script:
+    - export "DATABASE_URI=$DATABASE_URI"
+    - export "SECRET_KEY=$SECRET_KEY"
+    - pip install --no-cache-dir pipenv
+    - pipenv install 
+    - pipenv install pytest
+  script:
+    - pipenv run pytest todo_project/todo_project/tests/test_routes.py
+  
+stage:
+  image: docker:latest
+  stage: stage
+  script:
+    - docker stop flask-stage && docker rm flask-stage
+    - docker run -d --rm --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log flask/hdb

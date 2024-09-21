@@ -30,3 +30,5 @@ ENV PYTHONUNBUFFERED=1
 
 # Expõe a porta 9000 para o Flask
 EXPOSE 9000
+
+CMD ["pipenv", "run", "gunicorn", "-b", "0.0.0.0:9000", "todo_project:app"]
