@@ -33,10 +33,12 @@ bandit_job:
     - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium 
 
 dependency-check:
-  image: docker:latest
+  image: python:3.10-slim
   stage: dependency-check
   script:
-    - docker run --rm --volume $(pwd):/src owasp/dependency-check --nvd-api-key $NV_API_KEY --project "todo_project" --scan /src
+    - pip install pipenv safety  
+    - pipenv install --dev         
+    - pipenv run safety check       
 
 stage:
   image: docker:latest
