@@ -51,7 +51,7 @@ owasp-zap:
   image: docker:latest
   stage: owasp-zap
   script:
-    - docker run --network gitlab -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -I -t "http://flask-stage:9000"
+    - docker run --network gitlab -I -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t "http://flask-stage:9000"
 
 deploy:
   image: docker:latest
