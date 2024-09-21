@@ -43,11 +43,13 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         # Check if the user exists and the password is valid
         if user and bcrypt.check_password_hash(user.password, form.password.data):
+            app.logger.info(f'Login bem sucedido: {form.username.data}')
             login_user(user)
             task_form = TaskForm()
             flash('Login Successfull', 'success')
             return redirect(url_for('all_tasks'))
         else:
+            app.logger.warning(f'Falha no login: {form.username.data}')
             flash('Login Unsuccessful. Please check Username Or Password', 'danger')
     
     return render_template('login.html', title='Login', form=form)
@@ -56,6 +58,7 @@ def login():
 @app.route("/logout")
 def logout():
     logout_user()
+    app.logger.info(f'Logout bem sucedido!')
     return redirect(url_for('login'))
 
 
@@ -70,8 +73,11 @@ def register():
         user = User(username=form.username.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
+        app.logger.info(f'Cadastro efetuado: {form.username.data}')
         flash(f'Account Created For {form.username.data}', 'success')
         return redirect(url_for('login'))
+    elif request.method == 'POST':
+        app.logger.warning(f'Cadastro não efetuado: {form.username.data}')
 
     return render_template('register.html', title='Register', form=form)
 
@@ -80,6 +86,7 @@ def register():
 @login_required
 def all_tasks():
     tasks = User.query.filter_by(username=current_user.username).first().tasks
+    app.logger.info(f'Visualização de tasks.')
     return render_template('all_tasks.html', title='All Tasks', tasks=tasks)
 
 
@@ -91,8 +98,11 @@ def add_task():
         task = Task(content=form.task_name.data, author=current_user)
         db.session.add(task)
         db.session.commit()
+        app.logger.info(f'Criação de task bem sucedida! {form.task_name.data}')
         flash('Task Created', 'success')
         return redirect(url_for('add_task'))
+    elif request.method == 'POST':
+        app.logger.warning(f'Criação de task não efetuada: {form.task_name.data}')
     return render_template('add_task.html', form=form, title='Add Task')
 
 
@@ -105,11 +115,14 @@ def update_task(task_id):
         if form.task_name.data != task.content:
             task.content = form.task_name.data
             db.session.commit()
+            app.logger.info(f'Atualização de task bem sucedida! {form.task_name.data}')
             flash('Task Updated', 'success')
             return redirect(url_for('all_tasks'))
         else:
             flash('No Changes Made', 'warning')
             return redirect(url_for('all_tasks'))
+    elif request.method == 'POST':
+        app.logger.warning(f'Atualização de task não efetuada: {form.task_name.data}')
     elif request.method == 'GET':
         form.task_name.data = task.content
     return render_template('add_task.html', title='Update Task', form=form)
@@ -121,6 +134,7 @@ def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
+    app.logger.info(f'Exclusão de task bem sucedida!')
     flash('Task Deleted', 'info')
     return redirect(url_for('all_tasks'))
 
@@ -133,8 +147,11 @@ def account():
         if form.username.data != current_user.username:  
             current_user.username = form.username.data
             db.session.commit()
+            app.logger.info(f'Atualização de usuário bem sucedida! {form.username.data}')
             flash('Username Updated Successfully', 'success')
             return redirect(url_for('account'))
+    elif request.method == 'POST':
+        app.logger.warning(f'Atualização de usuário não efetuada: {form.username.data}')
     elif request.method == 'GET':
         form.username.data = current_user.username 
 
@@ -149,9 +166,11 @@ def change_password():
         if bcrypt.check_password_hash(current_user.password, form.old_password.data):
             current_user.password = bcrypt.generate_password_hash(form.new_password.data).decode('utf-8')
             db.session.commit()
+            app.logger.info(f'Atualização de senha bem sucedida!')
             flash('Password Changed Successfully', 'success')
             redirect(url_for('account'))
         else:
+            app.logger.warning(f'Atualização de senha não efetuada.')
             flash('Please Enter Correct Password', 'danger') 
 
     return render_template('change_password.html', title='Change Password', form=form)
