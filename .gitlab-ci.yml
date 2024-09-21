@@ -4,6 +4,7 @@ stages:
   - bandit
   - dependency-check
   - stage
+  - owasp-zap
   - deploy
 
 build:
@@ -35,7 +36,7 @@ dependency-check:
   image: docker:latest
   stage: dependency-check
   script:
-    - docker run --rm --volume $(pwd):/src owasp/dependency-check --project "todo_project" --scan /src
+    - docker run --rm --volume $(pwd):/src owasp/dependency-check --nvd-api-key $NV_API_KEY --project "todo_project" --scan /src
 
 stage:
   image: docker:latest
@@ -43,6 +44,12 @@ stage:
   script:
     - docker stop flask-stage && docker rm flask-stage
     - docker run -d --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 8000:9000 flask/hdb
+
+owasp-zap:
+  image: docker:latest
+  stage: owasp-zap
+  script:
+    - docker run --network gitlab -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -I -t "http://flask-stage:8000"
 
 deploy:
   image: docker:latest
