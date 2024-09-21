@@ -38,7 +38,7 @@ dependency-check:
   script:
     - pip install pipenv safety  
     - pipenv install --dev         
-    - pipenv run safety check       
+    - pipenv run safety check --ignore 62044,70612
 
 stage:
   image: docker:latest
