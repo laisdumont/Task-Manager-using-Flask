@@ -1,6 +1,6 @@
 #!/bin/sh
 # Token e Registro
-registration_token="GR1348941PHfnwDYgGAySCRJ7wmB4"
+registration_token="GR1348941GPFKeTKeuZt8eimn66wk"
 url="http://gitlab"
 
 docker exec -it gitlab-runner \
