@@ -39,7 +39,7 @@ bandit_job:
     - pipenv install bandit
     - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium
   rules:
-        - if: '$CI_MERGE_REQUEST_ID && $CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_MERGE_REQUEST_ID && $CI_COMMIT_BRANCH != "master"'
     - if: '$CI_COMMIT_BRANCH == "master"'
 
 dependency-check:
