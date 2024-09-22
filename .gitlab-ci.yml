@@ -7,6 +7,7 @@ stages:
   - owasp-zap
   - deploy
 
+
 build:
   image: docker:latest
   stage: build
