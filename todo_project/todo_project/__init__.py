@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from logging.handlers import SysLogHandler
 from flask.logging import default_handler
+from prometheus_flask_exporter import PrometheusMetrics
 from dotenv import load_dotenv
 import logging
 import os
@@ -17,6 +18,8 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 
 db = SQLAlchemy(app)
+
+metrics = PrometheusMetrics(app)
 
 app.logger.removeHandler(default_handler)
 syslog = SysLogHandler(address='/dev/log')

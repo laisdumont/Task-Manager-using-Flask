@@ -14,8 +14,6 @@ build:
     - docker build -t flask/hdb -f ./config/Dockerfile .
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
-
 
 test_job:
   image: python:3.10-slim
@@ -29,7 +27,6 @@ test_job:
     - pipenv run pytest todo_project/todo_project/tests/test_routes.py
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
   
 bandit_job:
   image: python:3.10-slim
@@ -40,7 +37,6 @@ bandit_job:
     - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
 
 dependency-check:
   image: python:3.10-slim
@@ -51,7 +47,6 @@ dependency-check:
     - pipenv run safety check --ignore 62044,70612
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
 
 stage:
   image: docker:latest
@@ -61,7 +56,6 @@ stage:
     - docker run -d --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 8000:9000 flask/hdb
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
 
 owasp-zap:
   image: docker:latest
@@ -70,7 +64,6 @@ owasp-zap:
     - docker run --network gitlab -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -I -t "http://flask-stage:9000"
   rules:
     - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS != "can_be_merged"'
 
 deploy:
   image: docker:latest

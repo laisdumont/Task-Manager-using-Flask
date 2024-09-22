@@ -1,6 +1,19 @@
 from flask import render_template, url_for, flash, redirect, request
 
 from todo_project import app, db, bcrypt
+from prometheus_client import Counter
+
+home_counter = Counter('home_requests_total', 'Total requests to the home page')
+about_counter = Counter('about_requests_total', 'Total requests to the about page')
+login_counter = Counter('login_requests_total', 'Total requests to the login page')
+register_counter = Counter('register_requests_total', 'Total requests to the register page')
+all_tasks_counter = Counter('all_tasks_requests_total', 'Total requests to the all_tasks page')
+add_task_counter = Counter('add_task_requests_total', 'Total requests to the add_task page')
+update_task_counter = Counter('update_task_requests_total', 'Total requests to the update_task page')
+delete_task_counter = Counter('delete_task_requests_total', 'Total requests to the delete_task page')
+account_counter = Counter('account_requests_total', 'Total requests to the account page')
+change_password_counter = Counter('change_password_requests_total', 'Total requests to the change_password page')
+
 
 # Import the forms
 from todo_project.forms import (LoginForm, RegistrationForm, UpdateUserInfoForm, 
@@ -29,11 +42,14 @@ def error_500(error):
 @app.route("/")
 @app.route("/about")
 def about():
+    home_counter.inc()
+    about_counter.inc()
     return render_template('about.html', title='About')
 
 
 @app.route("/login", methods=['POST', 'GET'])
 def login():
+    login_counter.inc()
     if current_user.is_authenticated:
         return redirect(url_for('all_tasks'))
 
@@ -64,6 +80,7 @@ def logout():
 
 @app.route("/register", methods=['POST', 'GET'])
 def register():
+    register_counter.inc()
     if current_user.is_authenticated:
         return redirect(url_for('all_tasks'))
 
@@ -85,6 +102,7 @@ def register():
 @app.route("/all_tasks")
 @login_required
 def all_tasks():
+    all_tasks_counter.inc()
     tasks = User.query.filter_by(username=current_user.username).first().tasks
     app.logger.info(f'Visualização de tasks.')
     return render_template('all_tasks.html', title='All Tasks', tasks=tasks)
@@ -93,6 +111,7 @@ def all_tasks():
 @app.route("/add_task", methods=['POST', 'GET'])
 @login_required
 def add_task():
+    add_task_counter.inc()
     form = TaskForm()
     if form.validate_on_submit():
         task = Task(content=form.task_name.data, author=current_user)
@@ -109,6 +128,7 @@ def add_task():
 @app.route("/all_tasks/<int:task_id>/update_task", methods=['GET', 'POST'])
 @login_required
 def update_task(task_id):
+    update_task_counter.inc()
     task = Task.query.get_or_404(task_id)
     form = UpdateTaskForm()
     if form.validate_on_submit():
@@ -131,6 +151,7 @@ def update_task(task_id):
 @app.route("/all_tasks/<int:task_id>/delete_task")
 @login_required
 def delete_task(task_id):
+    delete_task_counter.inc()
     task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
@@ -142,6 +163,7 @@ def delete_task(task_id):
 @app.route("/account", methods=['POST', 'GET'])
 @login_required
 def account():
+    account_counter.inc()
     form = UpdateUserInfoForm()
     if form.validate_on_submit():
         if form.username.data != current_user.username:  
@@ -161,6 +183,7 @@ def account():
 @app.route("/account/change_password", methods=['POST', 'GET'])
 @login_required
 def change_password():
+    change_password_counter.inc()
     form = UpdateUserPassword()
     if form.validate_on_submit():
         if bcrypt.check_password_hash(current_user.password, form.old_password.data):
