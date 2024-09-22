@@ -12,6 +12,8 @@ build:
   stage: build
   script:
     - docker build -t flask/hdb -f ./config/Dockerfile .
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
 
 test_job:
   image: python:3.10-slim
@@ -23,6 +25,8 @@ test_job:
     - pipenv install 
     - pipenv install pytest
     - pipenv run pytest todo_project/todo_project/tests/test_routes.py
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
   
 bandit_job:
   image: python:3.10-slim
@@ -30,7 +34,9 @@ bandit_job:
   script:
     - pip install --no-cache-dir pipenv
     - pipenv install bandit
-    - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium 
+    - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
 
 dependency-check:
   image: python:3.10-slim
@@ -39,6 +45,8 @@ dependency-check:
     - pip install pipenv safety  
     - pipenv install --dev         
     - pipenv run safety check --ignore 62044,70612
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
 
 stage:
   image: docker:latest
@@ -46,16 +54,23 @@ stage:
   script:
     - docker stop flask-stage && docker rm flask-stage
     - docker run -d --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 8000:9000 flask/hdb
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
 
 owasp-zap:
   image: docker:latest
   stage: owasp-zap
   script:
     - docker run --network gitlab -I -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t "http://flask-stage:9000"
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
 
 deploy:
   image: docker:latest
   stage: deploy
   script:
+    - docker stop flask-stage && docker rm flask-stage
     - docker stop flask && docker rm flask
     - docker run -d --name flask --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 9000:9000 flask/hdb
+  rules:
+    - if: '$CI_MERGE_REQUEST_MERGE_STATUS == "can_be_merged"'
