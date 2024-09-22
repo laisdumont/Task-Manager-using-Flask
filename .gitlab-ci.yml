@@ -13,7 +13,7 @@ build:
   script:
     - docker build -t flask/hdb -f ./config/Dockerfile .
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
 
 test_job:
   image: python:3.10-slim
@@ -26,7 +26,7 @@ test_job:
     - pipenv install pytest
     - pipenv run pytest todo_project/todo_project/tests/test_routes.py
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
   
 bandit_job:
   image: python:3.10-slim
@@ -36,7 +36,7 @@ bandit_job:
     - pipenv install bandit
     - pipenv run bandit -r todo_project/todo_project --exclude venv,tests --severity-level medium --confidence-level medium
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
 
 dependency-check:
   image: python:3.10-slim
@@ -46,7 +46,7 @@ dependency-check:
     - pipenv install --dev         
     - pipenv run safety check --ignore 62044,70612
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
 
 stage:
   image: docker:latest
@@ -55,15 +55,15 @@ stage:
     - docker stop flask-stage && docker rm flask-stage
     - docker run -d --name flask-stage --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 8000:9000 flask/hdb
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
 
 owasp-zap:
   image: docker:latest
   stage: owasp-zap
   script:
-    - docker run --network gitlab -I -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t "http://flask-stage:9000"
+    - docker run --network gitlab -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -I -t "http://flask-stage:9000"
   rules:
-    - if: '$CI_MERGE_REQUEST_ID'
+    - if: '$CI_MERGE_REQUEST_ID || $CI_COMMIT_BRANCH == "master"'
 
 deploy:
   image: docker:latest
@@ -73,4 +73,4 @@ deploy:
     - docker stop flask && docker rm flask
     - docker run -d --name flask --network gitlab --restart always -e "SECRET_KEY=$SECRET_KEY" -e "DATABASE_URI=$DATABASE_URI" -v /dev/log:/dev/log -p 9000:9000 flask/hdb
   rules:
-    - if: '$CI_MERGE_REQUEST_MERGE_STATUS == "can_be_merged"'
+    - if: '$CI_MERGE_REQUEST_MERGE_STATUS == "can_be_merged" || $CI_COMMIT_BRANCH == "master"'
