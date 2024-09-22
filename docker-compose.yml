@@ -39,6 +39,9 @@ services:
       - "9090:9090"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - gitlab
+    restart: always
   
   grafana:
     image: grafana/grafana:latest
@@ -52,6 +55,9 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - ./config/grafana:/var/lib/grafana
+    networks:
+      - gitlab
+    restart: always
 
 networks:
   gitlab:
